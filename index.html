@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création d'une chanson rap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #lyrics {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Création d'une chanson rap</h1>
+    <button onclick="startRap()">Commencer le rap</button>
+    <div id="lyrics"></div>
+
+    <script>
+        const lyrics = [
+            "Dans la rue sombre, la vie m'appelle, des rêves égarés,",
+            "Les défis se dressent, je marche, le cœur lourd,",
+            "Les amis partent comme des ombres, loyauté oubliée,",
+            "Dans ce monde froid, l'amour s'efface, une rareté,",
+            "La nuit tombe, les étoiles pleurent, je m'égare dans mes pensées,",
+            "Les échos du passé murmurent, chaque pas, une douleur.",
+            "Les étoiles brillent, mais le chemin est obscur,",
+            "Chaque choix, un poids sur mon âme, mais je ne plie pas,",
+            "Écrire ma propre histoire, briser les chaînes de l'angoisse,",
+            "Le regard vers l'horizon, le cœur qui se débat,",
+            "Les mots sont mes armes, la vérité, mon fardeau,",
+            "Dans la tempête, je cherche ma clarté perdue.",
+            "Les larmes coulent, mais je masque ma douleur,",
+            "Les souvenirs me hantent, mais j'essaie de croire encore,",
+            "Un jour, je toucherai le ciel, ce n'est pas un rêve,",
+            "Chaque échec, une leçon, mais je tombe et je me relève,",
+            "La vie est une danse, entre ombres et tristesse,",
+            "Je trace ma voie, je ne reculerai pas, c'est une promesse.",
+            "Chaque instant compte, je savoure chaque seconde,",
+            "La passion brûle, je suis prêt à répondre,",
+            "Les voix du passé murmurent, mais je fais le choix,",
+            "De vivre pour moi-même, d'écouter ma voix blessée.",
+            "Dans ce monde qui change, je reste authentique,",
+            "Mon cœur bat au rythme de ma propre mélancolie,",
+            "Je construis mon empire, brique par brique,",
+            "Avec chaque mot, je rends la vie magique, mais triste.",
+            "Alors lève la main, si tu ressens cette douleur,",
+            "Nous sommes tous ensemble, face à la morosité,",
+            "Avec un cœur de lion, je chante ma vérité,",
+            "Dans ce rap, je trouve ma liberté, mais à quel prix ?"
+        ];
+
+        let audioContext;
+        let gainNode;
+
+        function setupAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // خفض الصوت قليلاً
+            gainNode.connect(audioContext.destination);
+        }
+
+        function playDrumBeat() {
+            const interval = 600; // الفاصل الزمني
+            let counter = 0;
+
+            const drumInterval = setInterval(() => {
+                if (counter % 4 === 0) {
+                    createBeat(50, 0, 0.4); // Bass drum
+                } else if (counter % 4 === 1) {
+                    createBeat(200, 0, 0.2); // Snare drum
+                } else if (counter % 4 === 2) {
+                    createBeat(50, 0, 0.4); // Bass drum
+                } else if (counter % 4 === 3) {
+                    createBeat(200, 0, 0.2); // Snare drum
+                }
+
+                counter++;
+                if (counter >= 32) { // توقف بعد 32 نبضة (حوالي 19.2 ثانية)
+                    clearInterval(drumInterval);
+                }
+            }, interval);
+            return drumInterval; // إعادة إرجاع فترة الإيقاع
+        }
+
+        function createBeat(frequency, time, duration) {
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine'; // استخدام موجة جيبية
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + time);
+            oscillator.connect(gainNode);
+            oscillator.start(audioContext.currentTime + time);
+            oscillator.stop(audioContext.currentTime + time + duration);
+        }
+
+        function playBackgroundMusic() {
+            const duration = 0.6; // مدة كل نغمة
+            const notes = [220.00, 246.94, 261.63, 293.66, 329.63]; // ترددات نغمات عميقة
+            let noteIndex = 0;
+
+            const interval = setInterval(() => {
+                if (noteIndex >= notes.length) {
+                    noteIndex = 0; // إعادة تعيين الفهرس
+                }
+
+                createBeat(notes[noteIndex], 0, duration); // تشغيل النغمة
+                noteIndex++;
+
+                // إيقاف تشغيل الموسيقى بعد 30 ثانية
+                if (noteIndex >= notes.length * 10) {
+                    clearInterval(interval);
+                }
+            }, 600); // تغيير الفاصل الزمني بين النغمات
+        }
+
+        function speakLyrics(text, delay) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR'; // اللغة الفرنسية
+            utterance.rate = 1; // سرعة القراءة
+            utterance.pitch = 1; // نغمة الصوت
+            utterance.volume = 1; // الحد الأقصى للصوت
+            speechSynthesis.speak(utterance);
+        }
+
+        function displayAndSpeakLyrics(drumInterval) {
+            const lyricsDiv = document.getElementById('lyrics');
+            lyricsDiv.innerHTML = ''; // مسح النص الحالي
+            let index = 0;
+
+            const lyricsInterval = setInterval(() => {
+                if (index < lyrics.length) {
+                    lyricsDiv.innerHTML += lyrics[index] + '<br>'; // عرض السطر التالي
+
+                    // إذا كانت الكلمات الثلاث الأولى، توقف الإيقاع
+                    const isFirstThreeWords = (index < 3);
+                    if (isFirstThreeWords) {
+                        clearInterval(drumInterval); // توقف الإيقاع
+                    }
+
+                    const delay = (isFirstThreeWords) ? 400 : 800; // تأخير 400 مللي ثانية للكلمات الثلاث الأولى
+                    setTimeout(() => {
+                        speakLyrics(lyrics[index], delay);
+                        if (isFirstThreeWords) {
+                            // إعادة تشغيل الإيقاع بعد الكلمات الثلاث
+                            setTimeout(() => {
+                                drumInterval = playDrumBeat(); // إعادة تشغيل الإيقاع
+                            }, delay + 200); // التأخير بعد الكلمة
+                        }
+                    }, delay);
+                    index++;
+                } else {
+                    clearInterval(lyricsInterval); // التوقف بعد الانتهاء
+                }
+            }, 1200); // عرض وقراءة كل سطر بعد 1.2 ثانية
+        }
+
+        function startRap() {
+            setupAudio(); // إعداد الصوت
+            let drumInterval = playDrumBeat(); // تشغيل إيقاع الطبول
+            playBackgroundMusic(); // تشغيل الموسيقى الخلفية
+            setTimeout(() => {
+                displayAndSpeakLyrics(drumInterval); // بدء عرض وقراءة الكلمات بعد فترة
+            }, 500); // فترة للسماح ببدء الإيقاع
+        }
+    </script>
+</body>
+</html>
